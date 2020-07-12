@@ -88,4 +88,5 @@ class window(Tk):
         
 achraf = window()
 achraf.mainloop()
+print('hi')
 
