@@ -76,7 +76,16 @@ class program(Tk):
         self.tabEntities[name]['text'].pack()
         filePath = osPath.join(path, name)
         with open(filePath, "r") as func:
-            text = func.readlines()
+            try:
+                text = func.readlines()
+            except UnicodeDecodeError:
+                tabFrame.destroy()
+                errorFrame = Frame(self.tabParent)
+                errorLabel = Label(errorFrame, text="can't open this file")
+                errorLabel.pack()
+                self.tabParent.add(errorFrame, text='error')
+
+
             for line in text:
                 self.tabEntities[name]['text'].insert(END, line)
 test = program()

@@ -92,5 +92,14 @@ frameParent.pack()
 frame1.pack()
 frame2.pack()
 
+notebook = Notebook(root)
+notebook.pack()
+f = Frame(notebook)
+f_label = Label(f, text="jellooo")
+f_label.pack()
+
+notebook.add(f, text="1")
+
+
 root.mainloop()
 print('rem')
