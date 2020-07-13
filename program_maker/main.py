@@ -2,15 +2,17 @@ from tkinter import *
 from tkinter.ttk import *
 import pathlib
 from os import walk
+from os import path as osPath
 
 class program(Tk):
     def __init__(self,*args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
         self.geometry("500x500")
         self.tabParent = Notebook(self)
-        self.tabParent.pack(side=RIGHT)
         self.fileFrame = Frame(self)
         self.fileFrame.pack(side=LEFT, anchor=NE)
+        self.tabParent.pack(side=RIGHT)
+
         self.tabs = {}
         self.fileDict = {}
         self.renderDirectoryFiles()
@@ -28,11 +30,12 @@ class program(Tk):
             if key == 'files':
                 output[key] = list()
                 for file in fileDict['files']:
-                    tempButton = Button(parent, text= file, command=lambda f=file: print(f))
+                    tempButton = Button(parent, text= file, command=lambda path=fileDict['dir'], f=file: self.addTab(path, f))
                     output[key].append(tempButton)
                     index+=1
                     tempButton.grid(row=index+1, sticky=W, padx=(10,))
-                
+            elif key == 'dir':
+                pass  
             else:
                 temp =  {}
                 temp['frameParent'] = Frame(parent)
@@ -60,19 +63,23 @@ class program(Tk):
         for (p, dirs, files) in walk(path):
             for e in dirs:
                 output[e] = self.breakPaths(str(path) + '/' + e)
+            output['dir'] = p
             output['files'] = files
             break
         return output
-    def addTab(self, name):
+    def addTab(self,path, name):
         self.tabEntities[name] = {}
         tabFrame = Frame(self.tabParent)
         self.tabEntities[name]['self'] = tabFrame
-        self.tabParent.add(tabFrame, text='name')
+        self.tabParent.add(tabFrame, text=name)
         self.tabEntities[name]['text'] = Text(tabFrame)
-        self.tabEntities[name]['text'].insert(END, "hello world")
         self.tabEntities[name]['text'].pack()
+        filePath = osPath.join(path, name)
+        with open(filePath, "r") as func:
+            text = func.readlines()
+            for line in text:
+                self.tabEntities[name]['text'].insert(END, line)
 test = program()
-
 
 
 
