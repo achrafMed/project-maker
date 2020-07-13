@@ -15,7 +15,6 @@ class program(Tk):
         self.renderDirectoryFiles()
 
     def renderDirectoryFiles(self):
-
         self.dirPath = pathlib.Path('C:\\Users\\Dell\\Documents\\programs')
         folderTabData = self.breakPaths(self.dirPath)
         self.fileDict = folderTabData

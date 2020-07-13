@@ -2,7 +2,6 @@ from tkinter import *
 from tkinter.ttk import *
 from os import walk
 import pathlib
-from functools import partial
 root = Tk()
 open = False
 
