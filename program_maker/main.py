@@ -8,12 +8,13 @@ class program(Tk):
         Tk.__init__(self, *args, **kwargs)
         self.geometry("500x500")
         self.tabParent = Notebook(self)
+        self.tabParent.pack(side=RIGHT)
         self.fileFrame = Frame(self)
-        self.fileFrame.pack(side=LEFT)
+        self.fileFrame.pack(side=LEFT, anchor=NE)
         self.tabs = {}
         self.fileDict = {}
         self.renderDirectoryFiles()
-
+        self.tabEntities = {}
     def renderDirectoryFiles(self):
         self.dirPath = pathlib.Path('C:\\Users\\Dell\\Documents\\programs')
         folderTabData = self.breakPaths(self.dirPath)
@@ -62,7 +63,14 @@ class program(Tk):
             output['files'] = files
             break
         return output
-
+    def addTab(self, name):
+        self.tabEntities[name] = {}
+        tabFrame = Frame(self.tabParent)
+        self.tabEntities[name]['self'] = tabFrame
+        self.tabParent.add(tabFrame, text='name')
+        self.tabEntities[name]['text'] = Text(tabFrame)
+        self.tabEntities[name]['text'].insert(END, "hello world")
+        self.tabEntities[name]['text'].pack()
 test = program()
 
 
