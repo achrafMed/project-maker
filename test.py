@@ -94,3 +94,4 @@ frame1.pack()
 frame2.pack()
 
 root.mainloop()
+print('hi git')
