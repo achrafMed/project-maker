@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter.ttk import *
+import tkinter.filedialog as filedialog
 import pathlib
 from os import walk
 from os import path as osPath
@@ -11,14 +12,35 @@ class program(Tk):
         self.tabParent = Notebook(self)
         self.fileFrame = Frame(self)
         self.fileFrame.pack(side=LEFT, anchor=NE)
-        self.tabParent.pack(side=RIGHT)
-
+        self.tabParent.pack(side=LEFT, fill=BOTH, expand=1)
         self.tabs = {}
         self.fileDict = {}
         self.renderDirectoryFiles()
         self.tabEntities = {}
+        self._createMenu()
+    def _createMenu(self):
+        self.menu = Menu(self)
+        self.config(menu=self.menu)
+
+        fileMenu = Menu(self.menu)
+        fileMenu.add_command(label="open folder", command=self.renderDirectoryFiles)
+        fileMenu.add_command(label="Exit", command=self.quit)
+        self.menu.add_cascade(label="File", menu=fileMenu)
+
+        editMenu = Menu(self.menu)
+        editMenu.add_command(label="Undo")
+        editMenu.add_command(label="Redo")
+        self.menu.add_cascade(label="Edit", menu=editMenu)
     def renderDirectoryFiles(self):
-        self.dirPath = pathlib.Path('C:\\Users\\Dell\\Documents\\programs')
+        self.tabParent.destroy()
+        self.fileFrame.destroy()
+        
+        self.tabParent = Notebook(self)
+        self.fileFrame = Frame(self)
+        self.fileFrame.pack(side=LEFT, anchor=NE)
+        self.tabParent.pack(side=LEFT, fill=BOTH, expand=1)
+        self.tabEntities = {}
+        self.dirPath = self.openFileDialog()
         folderTabData = self.breakPaths(self.dirPath)
         self.fileDict = folderTabData
         self.fileFrameEntities = self.renderBlock(self.fileFrame, self.fileDict)
@@ -68,26 +90,34 @@ class program(Tk):
             break
         return output
     def addTab(self,path, name):
-        self.tabEntities[name] = {}
-        tabFrame = Frame(self.tabParent)
-        self.tabEntities[name]['self'] = tabFrame
-        self.tabParent.add(tabFrame, text=name)
-        self.tabEntities[name]['text'] = Text(tabFrame)
-        self.tabEntities[name]['text'].pack()
         filePath = osPath.join(path, name)
+        self.tabEntities[filePath] = {}
+        tabFrame = Frame(self.tabParent)
+        self.tabEntities[filePath]['self'] = tabFrame
+        self.tabParent.add(tabFrame, text=name)
+        self.tabEntities[filePath]['text'] = Text(tabFrame, tabs=('8m',))
+        self.tabEntities[filePath]['text'].pack(fill=BOTH, expand=1)
+        self.tabEntities[filePath]['save'] = Button(tabFrame, text="save", command=lambda p=filePath: self.saveFile(p))
+        self.tabEntities[filePath]['save'].pack()
         with open(filePath, "r") as func:
             try:
                 text = func.readlines()
+                for line in text:
+                    self.tabEntities[filePath]['text'].insert(END, line)
             except UnicodeDecodeError:
-                tabFrame.destroy()
-                errorFrame = Frame(self.tabParent)
-                errorLabel = Label(errorFrame, text="can't open this file")
-                errorLabel.pack()
-                self.tabParent.add(errorFrame, text='error')
+                self.tabEntities[name]['text'].insert(END, "can't open this file")
+    def saveFile(self, filePath):
+        #wText is the text widget
+        text = self.tabEntities[filePath]['text'].get('1.0', END)
+        with open(filePath, "w+") as f:
+            f.write(text)
+            f.close()
+    def createTkinterProject(self):
+        print("jello world")
+    def openFileDialog(self):
+        folderPath = filedialog.askdirectory(title="open folder")
+        return folderPath
 
-
-            for line in text:
-                self.tabEntities[name]['text'].insert(END, line)
 test = program()
 
 
