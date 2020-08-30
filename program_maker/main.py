@@ -147,7 +147,7 @@ class program(Tk):
 
     def createTkCanvas(self, filePath):
         tkCanvas = Canvas(self.tabParent)
-        CanvasName = filePath.split('/')[len(filePath.split())-1]
+        CanvasName = filePath.split('/')[len(filePath.split('/'))-1]
         if CanvasName in list(self.tabEntities['canvas']['entities'].keys()):
             CanvasName = "{}/{}~design".format(filePath.split('/')[len(filePath.split())-2],filePath.split('/')[len(filePath.split())-1])
         else:
@@ -177,15 +177,26 @@ class program(Tk):
         for widget in objWidgets:
             widget.pack(side=TOP)
     def moveWidgetWithCursor(self, event, widget):
-        x = self.winfo_pointerx()-self.winfo_rootx()
-        y = self.winfo_pointery()-self.winfo_rooty()
+        parent = Widget._nametowidget(self, widget.winfo_parent())
+        width, height = parent.winfo_width()/2, parent.winfo_height()/2
+        locx, locy = widget.winfo_x(), widget.winfo_y()
+        w , h =self.winfo_width(),self.winfo_height()
+        mx ,my =widget.winfo_width(),widget.winfo_height()
+        xpos=(locx+event.x)-(15)
+        ypos=(locy+event.y)-int(my/2)
+        if xpos>=0 and ypos>=0 and w-abs(xpos)>=0 and h-abs(ypos)>=0 and xpos<=w-5 and ypos<=h-5:
+            widget.place(x=xpos-width,y=ypos-height)
 
-        widget.place_forget()
-        widget.place(x=x, y=y, anchor='center')
+
+
+        #
         
     def addWidgetToCanvas(self, widget):
         activeTabName = self.tabParent.tab(self.tabParent.select(), "text")
-        filePath = self.tabEntities['canvas']['entities'][activeTabName]
+        try:
+            filePath = self.tabEntities['canvas']['entities'][activeTabName]
+        except KeyError:
+            pass
         indexes = [b[0] for b in self.tabEntities['canvas'][filePath]['children']]
         try:
             index = max(indexes) + 1
