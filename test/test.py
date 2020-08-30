@@ -1,17 +1,11 @@
-from os import walk
-import pathlib
+import sys, inspect
+import tkinter.ttk
 
-c_path = pathlib.Path(__file__).parent.parent.absolute()
 
-print(c_path)
+def print_classes():
+    a = inspect.getmembers(sys.modules[tkinter.ttk.__name__])
+   
 
-def breakPaths(path):
-    output = {}
-    for (p, dirs, files) in walk(path):
-        for e in dirs:
-            output[e] = breakPaths(str(path) + '/' + e)
-        output['files'] = files
-        break
-    return output
-
-print(breakPaths(c_path))
+    widgets = [e for e in a if inspect.isclass(e[1])]
+    print(widgets)
+print_classes()

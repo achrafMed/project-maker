@@ -1,13 +1,17 @@
 from tkinter import *
+
 from tkinter.ttk import *
 import tkinter.filedialog as filedialog
 import pathlib
-from os import walk
+import sys, inspect
+from os import walk, mkdir
 from os import path as osPath
-
+from database.jsonFile import json, splitter
 class program(Tk):
     def __init__(self,*args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
+        self.js = json()
+        self.tkFile = ""
         self.geometry("500x500")
         self.tabParent = Notebook(self)
         self.fileFrame = Frame(self)
@@ -15,8 +19,14 @@ class program(Tk):
         self.tabParent.pack(side=LEFT, fill=BOTH, expand=1)
         self.tabs = {}
         self.fileDict = {}
-        self.renderDirectoryFiles()
+
         self.tabEntities = {}
+        self.tabEntities['canvas'] = {}
+        self.tabEntities['canvas']['entities'] = {}
+        self.widgetParent = Frame(self)
+        self.widgetParent.pack(side=RIGHT)
+        self.renderDirectoryFiles()
+        self.canvasEntities = list()
         self._createMenu()
     def _createMenu(self):
         self.menu = Menu(self)
@@ -24,6 +34,7 @@ class program(Tk):
 
         fileMenu = Menu(self.menu)
         fileMenu.add_command(label="open folder", command=self.renderDirectoryFiles)
+        fileMenu.add_command(label="create tkinter project", command=lambda:  self.createTkinterProject(self.dirPath))
         fileMenu.add_command(label="Exit", command=self.quit)
         self.menu.add_cascade(label="File", menu=fileMenu)
 
@@ -39,7 +50,6 @@ class program(Tk):
         self.fileFrame = Frame(self)
         self.fileFrame.pack(side=LEFT, anchor=NE)
         self.tabParent.pack(side=LEFT, fill=BOTH, expand=1)
-        self.tabEntities = {}
         self.dirPath = self.openFileDialog()
         folderTabData = self.breakPaths(self.dirPath)
         self.fileDict = folderTabData
@@ -112,12 +122,79 @@ class program(Tk):
         with open(filePath, "w+") as f:
             f.write(text)
             f.close()
-    def createTkinterProject(self):
-        print("jello world")
+    def createTkinterProject(self, filePath):
+        templateText = list()
+        with open("templates/empty_window.py", "r") as f:
+            templateText = f.readlines()
+            f.close()
+        mkdir(filePath + '/tk_project')
+        mkdir(filePath + '/tk_project/.cache')
+        with open(filePath + "/tk_project" + "/main.py", "w+") as f:
+            f.writelines(templateText)
+            f.close()
+
+        with open(filePath + "/tk_project/.cache/components.txt", "w+") as f:
+            f.write('cahe file')
+            f.close()
+        self.renderDirectoryFiles()
+        self.tkFile = filePath + "/tk_project/main.py"
+        self.tkFileCache = filePath + "/tk_project/.cache/components.txt"
+        self.createTkCanvas(self.tkFile)
+
     def openFileDialog(self):
         folderPath = filedialog.askdirectory(title="open folder")
         return folderPath
 
+    def createTkCanvas(self, filePath):
+        tkCanvas = Canvas(self.tabParent)
+        CanvasName = filePath.split('/')[len(filePath.split())-1]
+        if CanvasName in list(self.tabEntities['canvas']['entities'].keys()):
+            CanvasName = "{}/{}~design".format(filePath.split('/')[len(filePath.split())-2],filePath.split('/')[len(filePath.split())-1])
+        else:
+            CanvasName +='~design'
+        with open(self.tkFileCache, 'r') as f:
+            tkFileDict = f.readlines()
+            fileDict = self.js.string_to_dict(tkFileDict)
+            f.close()
+        self.tabParent.add(tkCanvas, text=CanvasName)
+
+        self.tabEntities['canvas'][filePath] = {}
+        self.tabEntities['canvas'][filePath]['self'] = tkCanvas
+        self.tabEntities['canvas'][filePath]['children'] = []
+        self.tabEntities['canvas']['entities'][CanvasName] = filePath
+        try:
+            fileComponents = fileDict[filePath]
+            self.renderWidgetGallery()
+        except KeyError:
+            fileDict[filePath] = {}
+            self.renderWidgetGallery()
+    def renderWidgetGallery(self):
+
+        import tkinter.ttk
+        iOut = inspect.getmembers(sys.modules[tkinter.ttk.__name__])
+        widgets = [e for e in iOut if inspect.isclass(e[1])]
+        objWidgets = list(map(lambda e: Button(self.widgetParent, text=e[0], command= lambda a=e[1]: self.addWidgetToCanvas(a)), widgets))
+        for widget in objWidgets:
+            widget.pack(side=TOP)
+    def moveWidgetWithCursor(self, event, widget):
+        x = self.winfo_pointerx()-self.winfo_rootx()
+        y = self.winfo_pointery()-self.winfo_rooty()
+
+        widget.place_forget()
+        widget.place(x=x, y=y, anchor='center')
+        
+    def addWidgetToCanvas(self, widget):
+        activeTabName = self.tabParent.tab(self.tabParent.select(), "text")
+        filePath = self.tabEntities['canvas']['entities'][activeTabName]
+        indexes = [b[0] for b in self.tabEntities['canvas'][filePath]['children']]
+        try:
+            index = max(indexes) + 1
+        except ValueError:
+            index = 0
+        w = widget(self.tabEntities['canvas'][filePath]['self'], text="text here")
+        w.bind('<B1-Motion>', lambda event, e=w: self.moveWidgetWithCursor(event, e))
+        w.place(relx=0.5, rely=0.5, anchor='center')
+        self.tabEntities['canvas'][filePath]['children'].append((index, w))
 test = program()
 
 
