@@ -1,16 +1,21 @@
 from tkinter import *
-
+import json
 from tkinter.ttk import *
 import tkinter.filedialog as filedialog
 import pathlib
 import sys, inspect
 from os import walk, mkdir
 from os import path as osPath
-from database.jsonFile import json, splitter
+
+
+
+
 class program(Tk):
     def __init__(self,*args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
-        self.js = json()
+        import tkinter.ttk
+        iOut = inspect.getmembers(sys.modules[tkinter.ttk.__name__])
+        self.widgets = [e for e in iOut if inspect.isclass(e[1])]
         self.tkFile = ""
         self.geometry("500x500")
         self.tabParent = Notebook(self)
@@ -19,7 +24,7 @@ class program(Tk):
         self.tabParent.pack(side=LEFT, fill=BOTH, expand=1)
         self.tabs = {}
         self.fileDict = {}
-
+        self.cacheDict = {}
         self.tabEntities = {}
         self.tabEntities['canvas'] = {}
         self.tabEntities['canvas']['entities'] = {}
@@ -35,17 +40,31 @@ class program(Tk):
         fileMenu = Menu(self.menu)
         fileMenu.add_command(label="open folder", command=self.renderDirectoryFiles)
         fileMenu.add_command(label="create tkinter project", command=lambda:  self.createTkinterProject(self.dirPath))
-        fileMenu.add_command(label="Exit", command=self.quit)
+        fileMenu.add_command(label="Exit", command=self._quit)
         self.menu.add_cascade(label="File", menu=fileMenu)
 
         editMenu = Menu(self.menu)
         editMenu.add_command(label="Undo")
         editMenu.add_command(label="Redo")
         self.menu.add_cascade(label="Edit", menu=editMenu)
+    def _quit(self):
+
+        with open(self.dirPath + '/tk_project/.cache/components.json', 'w') as f:
+
+            json.dump(self.cacheDict, f)
+            f.close()
+            
+            #try:
+            #    with open(self.dirPath + '/tk_project/.cache/components.json', 'w') as f:
+            #        json.dump(self.cacheDict, f)
+            #        f.close()
+            #except:
+            #    pass
+        self.quit()
     def renderDirectoryFiles(self):
         self.tabParent.destroy()
         self.fileFrame.destroy()
-        
+
         self.tabParent = Notebook(self)
         self.fileFrame = Frame(self)
         self.fileFrame.pack(side=LEFT, anchor=NE)
@@ -54,6 +73,15 @@ class program(Tk):
         folderTabData = self.breakPaths(self.dirPath)
         self.fileDict = folderTabData
         self.fileFrameEntities = self.renderBlock(self.fileFrame, self.fileDict)
+        self.fileDict = {}
+        self.cacheDict = {}
+        self.tabEntities = {}
+        self.tabEntities['canvas'] = {}
+        self.tabEntities['canvas']['entities'] = {}
+        try:
+            self.openTkCanvas()
+        except:
+            pass
     def renderBlock(self, parent, fileDict):
         index = 0
         output = {}
@@ -67,7 +95,7 @@ class program(Tk):
                     index+=1
                     tempButton.grid(row=index+1, sticky=W, padx=(10,))
             elif key == 'dir':
-                pass  
+                pass
             else:
                 temp =  {}
                 temp['frameParent'] = Frame(parent)
@@ -79,7 +107,7 @@ class program(Tk):
 
                 index+=2
                 temp.update(self.renderBlock(temp['frameParent'], fileDict[key]))
-                
+
                 output = temp
 
         return output
@@ -89,7 +117,7 @@ class program(Tk):
         else:
             frame.grid_forget()
 
-    
+
     def breakPaths(self, path):
         output = {}
         for (p, dirs, files) in walk(path):
@@ -133,79 +161,120 @@ class program(Tk):
             f.writelines(templateText)
             f.close()
 
-        with open(filePath + "/tk_project/.cache/components.txt", "w+") as f:
-            f.write('cahe file')
+        with open(filePath + "/tk_project/.cache/components.json", "w+") as f:
             f.close()
         self.renderDirectoryFiles()
         self.tkFile = filePath + "/tk_project/main.py"
-        self.tkFileCache = filePath + "/tk_project/.cache/components.txt"
+        self.tkFileCache = filePath + "/tk_project/.cache/components.json"
         self.createTkCanvas(self.tkFile)
 
     def openFileDialog(self):
         folderPath = filedialog.askdirectory(title="open folder")
         return folderPath
+    def openTkCanvas(self):
+        try:
+            tkFileCache = self.dirPath+ "/.cache/components.json"
+            with open(tkFileCache, 'r') as f:
+                try:
+                    cacheDict = json.load(f)
+                except json.decoder.JSONDecodeError:
+                    cachDict = {}
+                self.cacheDict = cacheDict
+                for key in list(cacheDict.keys()):
+                    if key != '':
+                        self.createTkCanvas(key)
+                f.close()
+        except:
+            tkFileCache = self.dirPath+ "/tk_project/.cache/components.json"
+            with open(tkFileCache, 'r') as f:
+                try:
+                    cacheDict = json.load(f)
+                except json.decoder.JSONDecodeError:
+                    cachDict = {}
+                self.cacheDict = cacheDict
+                print(self.cacheDict)
+                for key in list(cacheDict.keys()):
+                    if key != '':
+                        self.createTkCanvas(key)
+                f.close()
 
     def createTkCanvas(self, filePath):
-        tkCanvas = Canvas(self.tabParent)
+        tkCanvas = Frame(self.tabParent)
         CanvasName = filePath.split('/')[len(filePath.split('/'))-1]
         if CanvasName in list(self.tabEntities['canvas']['entities'].keys()):
             CanvasName = "{}/{}~design".format(filePath.split('/')[len(filePath.split())-2],filePath.split('/')[len(filePath.split())-1])
         else:
             CanvasName +='~design'
-        with open(self.tkFileCache, 'r') as f:
-            tkFileDict = f.readlines()
-            fileDict = self.js.string_to_dict(tkFileDict)
-            f.close()
         self.tabParent.add(tkCanvas, text=CanvasName)
-
         self.tabEntities['canvas'][filePath] = {}
         self.tabEntities['canvas'][filePath]['self'] = tkCanvas
         self.tabEntities['canvas'][filePath]['children'] = []
         self.tabEntities['canvas']['entities'][CanvasName] = filePath
         try:
-            fileComponents = fileDict[filePath]
+            fileComponents = self.cacheDict[filePath]
+            self.renderTkWidgets(fileComponents)
             self.renderWidgetGallery()
+            self.cacheDict[filePath]['parent']['self'] = {'type': 'Frame', "text": CanvasName}
         except KeyError:
-            fileDict[filePath] = {}
+            self.cacheDict[filePath] = {}
             self.renderWidgetGallery()
-    def renderWidgetGallery(self):
+            self.cacheDict[filePath]['parent'] = {}
+            self.cacheDict[filePath]['parent']['self'] = {'type': 'Frame', 'text': CanvasName}
+    def renderTkWidgets(self, fileComponents):
+        filePath = [e for e in list(self.cacheDict.keys()) if self.cacheDict[e] == fileComponents][0]
+        print(filePath)
+        canvas = self.tabEntities['canvas'][filePath]['self']
+        for key in list(fileComponents.keys()):
+            if key != "parent":
+                widget = [e[1] for e in self.widgets if fileComponents[key]['type'] == e[0]][0]
+                w = widget(canvas, text= fileComponents[key]['self']['text'])
+                w.place(x= fileComponents[key]['placeProps']['x'], y=fileComponents[key]['placeProps']['y'])
+                self.tabEntities['canvas'][filePath]['children'].append((int(key), w))
 
-        import tkinter.ttk
-        iOut = inspect.getmembers(sys.modules[tkinter.ttk.__name__])
-        widgets = [e for e in iOut if inspect.isclass(e[1])]
-        objWidgets = list(map(lambda e: Button(self.widgetParent, text=e[0], command= lambda a=e[1]: self.addWidgetToCanvas(a)), widgets))
+    def renderWidgetGallery(self):
+        objWidgets = list(map(lambda e: Button(self.widgetParent, text=e[0], command= lambda a=e[0]: self.addWidgetToCanvas(a)), self.widgets))
         for widget in objWidgets:
             widget.pack(side=TOP)
-    def moveWidgetWithCursor(self, event, widget):
-        parent = Widget._nametowidget(self, widget.winfo_parent())
-        width, height = parent.winfo_width()/2, parent.winfo_height()/2
-        locx, locy = widget.winfo_x(), widget.winfo_y()
-        w , h =self.winfo_width(),self.winfo_height()
-        mx ,my =widget.winfo_width(),widget.winfo_height()
-        xpos=(locx+event.x)-(15)
-        ypos=(locy+event.y)-int(my/2)
-        if xpos>=0 and ypos>=0 and w-abs(xpos)>=0 and h-abs(ypos)>=0 and xpos<=w-5 and ypos<=h-5:
-            widget.place(x=xpos-width,y=ypos-height)
-
-
-
-        #
+    def moveWidgetWithCursor(self, event, index):
         
-    def addWidgetToCanvas(self, widget):
+        activeTabName = self.tabParent.tab(self.tabParent.select(), "text")
+        filePath = self.tabEntities['canvas']['entities'][activeTabName]
+        widget = event.widget       
+        parent = Widget._nametowidget(self, widget.winfo_parent())
+        parent = Widget._nametowidget(self, parent.winfo_parent())
+        xpos, ypos = self.winfo_pointerx()- self.winfo_x()-8-parent.winfo_x(), self.winfo_pointery()- self.winfo_y()-50-parent.winfo_y()-23
+        print(f"{self.winfo_pointerx()- self.winfo_x()-8-parent.winfo_x()}, {self.winfo_pointery()- self.winfo_y()-50-parent.winfo_y()-23}")
+        widget.place_forget()
+        widget.place(x=xpos, y=ypos)
+        self.cacheDict[filePath][str(index)]['placeProps'].pop('relx', None)
+        self.cacheDict[filePath][str(index)]['placeProps'].pop('rely', None)
+        self.cacheDict[filePath][str(index)]['placeProps']['x'], self.cacheDict[filePath][str(index)]['placeProps']['y'] = xpos, ypos
+
+    def addWidgetToCanvas(self, widgetName):
         activeTabName = self.tabParent.tab(self.tabParent.select(), "text")
         try:
             filePath = self.tabEntities['canvas']['entities'][activeTabName]
         except KeyError:
-            pass
+            return
         indexes = [b[0] for b in self.tabEntities['canvas'][filePath]['children']]
         try:
             index = max(indexes) + 1
         except ValueError:
             index = 0
+        widget = [e[1] for e in self.widgets if e[0] == widgetName][0]
         w = widget(self.tabEntities['canvas'][filePath]['self'], text="text here")
-        w.bind('<B1-Motion>', lambda event, e=w: self.moveWidgetWithCursor(event, e))
+        w.bind('<B1-Motion>', lambda event, e=index: self.moveWidgetWithCursor(event, e))
         w.place(relx=0.5, rely=0.5, anchor='center')
-        self.tabEntities['canvas'][filePath]['children'].append((index, w))
+        widgetDict = {
+            'type': widgetName,
+            'self': {
+                'text': "text here"
+            },
+            'placeProps': {'relx': 0.5, 'rely': 0.5, 'anchor': CENTER}
+        }
+        self.tabEntities['canvas'][filePath]['children'].append((index, widgetDict))
+        self.cacheDict[filePath][str(index)] = widgetDict
+
 test = program()
 
 
