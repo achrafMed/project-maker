@@ -6,7 +6,8 @@ import pathlib
 import sys, inspect
 from os import walk, mkdir
 from os import path as osPath
-
+from src.properties import renderProperties
+from src.protocols import close
 
 
 
@@ -28,11 +29,16 @@ class program(Tk):
         self.tabEntities = {}
         self.tabEntities['canvas'] = {}
         self.tabEntities['canvas']['entities'] = {}
-        self.widgetParent = Frame(self)
-        self.widgetParent.pack(side=RIGHT)
+        self.widgetContainer = Frame(self)
+        self.widgetContainer.pack(side=RIGHT)
+        self.widgetParent = Frame(self.widgetContainer)
+        self.widgetParent.pack(side=TOP)
+        self.propertiesParent = Frame(self.widgetContainer)
+        self.propertiesParent.pack(side=BOTTOM)
         self.renderDirectoryFiles()
         self.canvasEntities = list()
         self._createMenu()
+        close(self, self._quit)
     def _createMenu(self):
         self.menu = Menu(self)
         self.config(menu=self.menu)
@@ -48,18 +54,16 @@ class program(Tk):
         editMenu.add_command(label="Redo")
         self.menu.add_cascade(label="Edit", menu=editMenu)
     def _quit(self):
+        try:
+            with open(self.dirPath + '/tk_project/.cache/components.json', 'w') as f:
 
-        with open(self.dirPath + '/tk_project/.cache/components.json', 'w') as f:
-
-            json.dump(self.cacheDict, f)
-            f.close()
+                json.dump(self.cacheDict, f)
+                f.close()
+        except:
+            with open(self.dirPath + '/.cache/components.json') as f:
+                json.dump(self.cacheDict, f)
+                f.close()    
             
-            #try:
-            #    with open(self.dirPath + '/tk_project/.cache/components.json', 'w') as f:
-            #        json.dump(self.cacheDict, f)
-            #        f.close()
-            #except:
-            #    pass
         self.quit()
     def renderDirectoryFiles(self):
         self.tabParent.destroy()
@@ -228,6 +232,7 @@ class program(Tk):
             if key != "parent":
                 widget = [e[1] for e in self.widgets if fileComponents[key]['type'] == e[0]][0]
                 w = widget(canvas, text= fileComponents[key]['self']['text'])
+                w.bind('<B1-Motion>', lambda e, index=key: self.moveWidgetWithCursor(e, index))
                 w.place(x= fileComponents[key]['placeProps']['x'], y=fileComponents[key]['placeProps']['y'])
                 self.tabEntities['canvas'][filePath]['children'].append((int(key), w))
 
@@ -243,7 +248,6 @@ class program(Tk):
         parent = Widget._nametowidget(self, widget.winfo_parent())
         parent = Widget._nametowidget(self, parent.winfo_parent())
         xpos, ypos = self.winfo_pointerx()- self.winfo_x()-8-parent.winfo_x(), self.winfo_pointery()- self.winfo_y()-50-parent.winfo_y()-23
-        print(f"{self.winfo_pointerx()- self.winfo_x()-8-parent.winfo_x()}, {self.winfo_pointery()- self.winfo_y()-50-parent.winfo_y()-23}")
         widget.place_forget()
         widget.place(x=xpos, y=ypos)
         self.cacheDict[filePath][str(index)]['placeProps'].pop('relx', None)
@@ -264,6 +268,7 @@ class program(Tk):
         widget = [e[1] for e in self.widgets if e[0] == widgetName][0]
         w = widget(self.tabEntities['canvas'][filePath]['self'], text="text here")
         w.bind('<B1-Motion>', lambda event, e=index: self.moveWidgetWithCursor(event, e))
+        w.bind('<Button-1>', lambda e, widget=w, parent=self.propertiesParent: renderProperties(widget, parent))
         w.place(relx=0.5, rely=0.5, anchor='center')
         widgetDict = {
             'type': widgetName,
@@ -276,7 +281,6 @@ class program(Tk):
         self.cacheDict[filePath][str(index)] = widgetDict
 
 test = program()
-
 
 
 
