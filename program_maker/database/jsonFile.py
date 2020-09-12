@@ -8,8 +8,8 @@ class splitter:
         self.c_curly = list()
         self.main_c = list()#the ùain curly brackets
         self.t_strings = list()
-        
-        
+
+
     def __cut(self, string):
         islist = False
         if len(string) == 0:
@@ -43,7 +43,7 @@ class splitter:
                     curlies[1].append(index - 1)
         #sorting the curlies
         if len(curlies[0]) != len(curlies[1]):
-            print(value)
+            #print(value)
             print("ERROR: cut")
             return
         index = 0
@@ -70,6 +70,7 @@ class splitter:
                 index -= 1
             else:
                 index += 1
+
         index = 0
         coms = self.get_com(value, quotes)
         if islist == True:
@@ -90,13 +91,14 @@ class splitter:
                 coms.pop(0)
             else:
                 coms.pop(0)
+        #print(res)
         return res
-        
+
     def cut(self, string):
         self.__init__()
         out = self.__cut(string)
         return out
-                
+
     def get_list(self, string, quotes):
         res = [[],[]] #first array is lists, second is tuples
         char = '['
@@ -121,7 +123,7 @@ class splitter:
                     break
             elif self.is_inside(string.find(char, index), quotes):
                 pass
-            else: 
+            else:
                 # index != -1
                 index = string.find(char, index)
                 if char == '[':
@@ -137,8 +139,8 @@ class splitter:
             print("ERROR: get_list")
             return
         index = 0
-        
-        n = 0 #indentifies which array to choose 
+
+        n = 0 #indentifies which array to choose
         while True:
             if len(array1[0]) == 0:
                 if len(array2[0]) == 0:
@@ -167,8 +169,8 @@ class splitter:
                 else:
                     index += 1
         return res
-                    
-            
+
+
     def get_com(self,string, quotes):
         index = 0
         res = list()
@@ -188,8 +190,8 @@ class splitter:
                     res.append(index)
                 index += 1
         return res
-    
-    
+
+
     def get_strings(self, string):
         array = list()
         index = 0
@@ -200,15 +202,17 @@ class splitter:
                 if char == "'":
                     char = '"'
                     index = 0
-                    pass
+
                 elif char == '"':
                     break
-            elif string.find(char, index + 1) == -1:
-                print('ERROR: missing apostrofie')
+            elif string.find(char, index+1 ) == -1:
+                print('ERROR: missing apostrofie at {}'.format(index))
+                #print(string)
                 break
             else:
-                array.append((index, string.find(char, index + 1)))
-                index = string.find(char, index + 1) + 1
+                array.append((index, string.find(char, index+1)))
+                index = string.find(char, index+1) + 1
+        #print(array)
         return array
     def is_inside(self, inIndex, array):
         for element in array:
@@ -240,7 +244,7 @@ class splitter:
                 return 'string'
             else:
                 strings = self.get_strings(string)
-                
+
                 self.t_strings = strings
                 res = ''
                 char = '{'
@@ -281,14 +285,14 @@ class splitter:
                             break
                         else:
                             index = string.find(char, index) + 1
-                return res            
+                return res
 
-                           
-                    
-                           
 
-                    
-                    
+
+
+
+
+
 
 spl = splitter()
 class json:
@@ -303,13 +307,13 @@ class json:
         self.t = 'dic'
         self.main = True
     def dict_to_string(self, dicname, dic):
-        self.string = '{' + '"' + dicname +  '"'+ ":" + str(dic) + '}' 
-        return self.string 
-              
-        
+        self.string = '{' + '"' + dicname +  '"'+ ":" + str(dic) + '}'
+        return self.string
+
+
     def tf(self, string):
 
-        
+
         t = self.split.type(string)
         if t == 'int':
             return int(string)
@@ -333,7 +337,7 @@ class json:
             output = self.str_to_dict(string)
             return output
         else:
-            return null
+            return None
 
 
     def str_to_dict(self, string):
@@ -363,7 +367,7 @@ class json:
             strs = self.split.get_strings(name)
             main = tuple()
             main = (len(name),len(name))
-        
+
             for e in strs:
                 if e[0] < main[0]:
                     main = e
@@ -384,7 +388,8 @@ dict = {
     ],
     'solde': [50000, 580]
 }
-test = "{'dic': {'name': 'achraf', 'age': 16, 'family': {'parents': 'dad and mother'}}, 'other': {'hi': {}, 'lol': {}}, 'third': {}}"
-
+test = "{'name': 'achraf', 'fam'; {'parents': '', 'siblings':''}}"
 
 dic = json()
+
+print(dic.string_to_dict(test))

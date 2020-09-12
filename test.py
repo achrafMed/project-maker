@@ -5,12 +5,12 @@ import pathlib
 root = Tk()
 open = False
 
-root.geometry("1000x1000")
+root.geometry("500x500")
 a = 250
 b=250
-button = Label(root, text="hi")
+button = Button(root, text='fuuuck')
 label = Label(root, text='hello')
-label.place(x=100, y=100)
+label.place(x=-100, y=-100)
 def hello(event):
     d = root.winfo_pointerx()-root.winfo_rootx()
     c = root.winfo_pointery()-root.winfo_rooty()
