@@ -8,7 +8,7 @@ from os import walk, mkdir
 from os import path as osPath
 from src.properties import renderProperties
 from src.protocols import close
-
+from src.codeGenerator import GenerateCode
 
 
 class program(Tk):
@@ -60,10 +60,14 @@ class program(Tk):
                 json.dump(self.cacheDict, f)
                 f.close()
         except:
-            with open(self.dirPath + '/.cache/components.json') as f:
-                json.dump(self.cacheDict, f)
-                f.close()    
-            
+            try:
+                with open(self.dirPath + '/.cache/components.json') as f:
+                    json.dump(self.cacheDict, f)
+                    f.close()
+            except:
+                self.quit()
+                return
+        GenerateCode(self.cacheDict)
         self.quit()
     def renderDirectoryFiles(self):
         self.tabParent.destroy()
@@ -226,7 +230,7 @@ class program(Tk):
             self.cacheDict[filePath]['parent']['self'] = {'type': 'Frame', 'text': CanvasName}
     def renderTkWidgets(self, fileComponents):
         filePath = [e for e in list(self.cacheDict.keys()) if self.cacheDict[e] == fileComponents][0]
-        print(filePath)
+        
         canvas = self.tabEntities['canvas'][filePath]['self']
         for key in list(fileComponents.keys()):
             if key != "parent":
@@ -275,7 +279,7 @@ class program(Tk):
             'self': {
                 'text': "text here"
             },
-            'placeProps': {'relx': 0.5, 'rely': 0.5, 'anchor': CENTER}
+            'placeProps': {'relx': 0.5, 'rely': 0.5, 'anchor': NW}
         }
         self.tabEntities['canvas'][filePath]['children'].append((index, widgetDict))
         self.cacheDict[filePath][str(index)] = widgetDict
