@@ -56,4 +56,3 @@ def keyValueParse(dic, *t) -> str:
             
     return string
 
-a ={'C:/Users/Dell/Desktop/project_tests/tk_project/main.py': {'parent': {'self': {'type': 'Frame', 'text': 'main.py~design'}}, '0': {'type': 'Button', 'self': {'text': 'text here'}, 'placeProps': {'anchor': 'center', 'x': 25, 'y': 21}}, '1': {'type': 'Checkbutton', 'self': {'text': 'text here'}, 'placeProps': {'anchor': 'center', 'x': 107, 'y': 25}}}}

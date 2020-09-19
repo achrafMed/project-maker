@@ -9,7 +9,8 @@ from os import path as osPath
 from src.properties import renderProperties
 from src.protocols import close
 from src.codeGenerator import GenerateCode
-
+from src.menuHandler import *
+from src.keyBindings import *
 
 class program(Tk):
     def __init__(self,*args, **kwargs):
@@ -37,22 +38,10 @@ class program(Tk):
         self.propertiesParent.pack(side=BOTTOM)
         self.renderDirectoryFiles()
         self.canvasEntities = list()
-        self._createMenu()
-        close(self, self._quit)
-    def _createMenu(self):
         self.menu = Menu(self)
-        self.config(menu=self.menu)
-
-        fileMenu = Menu(self.menu)
-        fileMenu.add_command(label="open folder", command=self.renderDirectoryFiles)
-        fileMenu.add_command(label="create tkinter project", command=lambda:  self.createTkinterProject(self.dirPath))
-        fileMenu.add_command(label="Exit", command=self._quit)
-        self.menu.add_cascade(label="File", menu=fileMenu)
-
-        editMenu = Menu(self.menu)
-        editMenu.add_command(label="Undo")
-        editMenu.add_command(label="Redo")
-        self.menu.add_cascade(label="Edit", menu=editMenu)
+        self.bind()
+        createMenu(self, self.menu)
+        close(self, self._quit)
     def _quit(self):
         try:
             with open(self.dirPath + '/tk_project/.cache/components.json', 'w') as f:
@@ -200,7 +189,6 @@ class program(Tk):
                 except json.decoder.JSONDecodeError:
                     cachDict = {}
                 self.cacheDict = cacheDict
-                print(self.cacheDict)
                 for key in list(cacheDict.keys()):
                     if key != '':
                         self.createTkCanvas(key)
@@ -238,6 +226,7 @@ class program(Tk):
                 w = widget(canvas, text= fileComponents[key]['self']['text'])
                 w.bind('<B1-Motion>', lambda e, index=key: self.moveWidgetWithCursor(e, index))
                 w.place(x= fileComponents[key]['placeProps']['x'], y=fileComponents[key]['placeProps']['y'])
+                w.bind('<Button-1>', lambda e, widget=w, parent=self: renderProperties(widget, parent))
                 self.tabEntities['canvas'][filePath]['children'].append((int(key), w))
 
     def renderWidgetGallery(self):
@@ -272,7 +261,7 @@ class program(Tk):
         widget = [e[1] for e in self.widgets if e[0] == widgetName][0]
         w = widget(self.tabEntities['canvas'][filePath]['self'], text="text here")
         w.bind('<B1-Motion>', lambda event, e=index: self.moveWidgetWithCursor(event, e))
-        w.bind('<Button-1>', lambda e, widget=w, parent=self.propertiesParent: renderProperties(widget, parent))
+        w.bind('<Button-1>', lambda e, widget=w, parent=self: renderProperties(widget, parent))
         w.place(relx=0.5, rely=0.5, anchor='center')
         widgetDict = {
             'type': widgetName,
