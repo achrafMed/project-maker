@@ -16,7 +16,14 @@ def createMenu(root, parent):
     editMenu.add_command(label="Redo")
     parent.add_cascade(label="Edit", menu=editMenu)
 
+    windowMenu = Menu(root.menu)
+    windowMenu.add_command(label="refresh", command= lambda e=root: refreshApp(e))
+    parent.add_cascade(label="window", menu=windowMenu)
 def saveChange(root):
     for key in root.tabEntities.keys():
         if key != 'canvas':
             root.saveFile(key)
+
+
+def refreshApp(root):
+    root.renderDirectoryFiles(root.dirPath)

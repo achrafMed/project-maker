@@ -58,7 +58,7 @@ class program(Tk):
                 return
         GenerateCode(self.cacheDict)
         self.quit()
-    def renderDirectoryFiles(self):
+    def renderDirectoryFiles(self, dirPath=''):
         self.tabParent.destroy()
         self.fileFrame.destroy()
 
@@ -66,7 +66,10 @@ class program(Tk):
         self.fileFrame = Frame(self)
         self.fileFrame.pack(side=LEFT, anchor=NE)
         self.tabParent.pack(side=LEFT, fill=BOTH, expand=1)
-        self.dirPath = self.openFileDialog()
+        if len(dirPath) != 0:
+            self.dirPath = dirPath
+        else:
+            self.dirPath = self.openFileDialog()
         folderTabData = self.breakPaths(self.dirPath)
         self.fileDict = folderTabData
         self.fileFrameEntities = self.renderBlock(self.fileFrame, self.fileDict)
@@ -226,7 +229,7 @@ class program(Tk):
                 w = widget(canvas, text= fileComponents[key]['self']['text'])
                 w.bind('<B1-Motion>', lambda e, index=key: self.moveWidgetWithCursor(e, index))
                 w.place(x= fileComponents[key]['placeProps']['x'], y=fileComponents[key]['placeProps']['y'])
-                w.bind('<Button-1>', lambda e, widget=w, parent=self: renderProperties(widget, parent))
+                w.bind('<Button-1>', lambda e, widget=w,k=key ,parent=self: renderProperties(widget,k, parent))
                 self.tabEntities['canvas'][filePath]['children'].append((int(key), w))
 
     def renderWidgetGallery(self):
